@@ -1,0 +1,6 @@
+# Ignore database config
+/config/config.php
+
+//environment vars
+.env
+*.env

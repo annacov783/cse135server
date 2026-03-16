@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Multi-Language Echo Form Demo</title>
+    <script>
+        function updateForm() {
+            const endpointSelect = document.getElementById('endpoint');
+            const methodSelect = document.getElementById('method');
+            const encodingSelect = document.getElementById('encoding');
+            const form = document.getElementById('echoForm');
+            const backendLabel = document.getElementById('backendLabel');
+
+            // Update action URL
+            form.action = endpointSelect.value;
+
+            // Update form method
+            form.method = methodSelect.value;
+
+            // Update enctype
+            if (encodingSelect.value === "application/json") {
+                form.enctype = "text/plain"; // CGI reads JSON from raw body
+            } else {
+                form.enctype = "application/x-www-form-urlencoded";
+            }
+
+            // Show selected backend name
+            backendLabel.textContent = endpointSelect.options[endpointSelect.selectedIndex].text;
+        }
+
+        function prepareJSON(e) {
+            const encodingSelect = document.getElementById('encoding');
+            if (encodingSelect.value === "application/json") {
+                e.preventDefault(); // Prevent normal submission
+
+                const fields = document.querySelectorAll('#echoForm input[name]');
+                let data = {};
+                fields.forEach(f => data[f.name] = f.value);
+
+                fetch(document.getElementById('echoForm').action, {
+                    method: document.getElementById('method').value,
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                .then(r => r.text())
+                .then(html => document.getElementById('output').innerHTML = html)
+                .catch(err => console.error(err));
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateForm();
+            document.getElementById('echoForm').addEventListener('submit', prepareJSON);
+        });
+    </script>
+</head>
+<body>
+<h1>Multi-Language Echo Form Demo</h1>
+
+<form id="echoForm" method="GET" action="echo.cgi">
+    <label>Backend Language / Endpoint:
+        <select id="endpoint" name="endpoint" onchange="updateForm()">
+            <option value="/cgi-bin/hw2/python/echo-python.py">Python CGI</option>
+            <option value="/cgi-bin/hw2/php/echo-php.php">PHP CGI</option>
+            <option value="/cgi-bin/hw2/c/echo-c.cgi">C CGI</option>
+            <!-- Add more endpoints here if needed -->
+        </select>
+    </label>
+    <span>(Selected: <strong id="backendLabel"></strong>)</span>
+    <br><br>
+
+    <label>HTTP Method:
+        <select id="method" name="method" onchange="updateForm()">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
+    </label>
+    <br><br>
+
+    <label>Encoding:
+        <select id="encoding" name="encoding" onchange="updateForm()">
+            <option value="application/x-www-form-urlencoded">x-www-form-urlencoded</option>
+            <option value="application/json">application/json</option>
+        </select>
+    </label>
+    <br><br>
+
+    <label>Field 1: <input type="text" name="field1"></label><br>
+    <label>Field 2: <input type="text" name="field2"></label><br><br>
+
+    <button type="submit">Send</button>
+</form>
+
+<h2>Output:</h2>
+<div id="output">
+    <!-- Server response will appear here if JavaScript is on -->
+</div>
+
+<noscript>
+    <p><strong>JavaScript is off.</strong> The form will still submit normally, but JSON encoding won’t work. The selected backend will be sent via the dropdown field.</p>
+</noscript>
+</body>
+</html>
